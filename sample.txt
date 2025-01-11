@@ -1,0 +1,137 @@
+Calculus is a branch of mathematics focused on rates of change (differential calculus) and accumulation of quantities (integral calculus). It serves as the foundation for many scientific and engineering disciplines. The concept of a limit is fundamental to calculus. It describes the value a function approaches as the input gets closer to a specific point. For example, 
+lim
+⁡
+𝑥
+→
+2
+(
+3
+𝑥
++
+1
+)
+=
+7
+lim 
+x→2
+​
+ (3x+1)=7, meaning as 
+𝑥
+x approaches 2, the function 
+3
+𝑥
++
+1
+3x+1 gets arbitrarily close to 7. The derivative measures the rate at which a function changes with respect to its variable. It is defined as 
+𝑓
+′
+(
+𝑥
+)
+=
+lim
+⁡
+ℎ
+→
+0
+𝑓
+(
+𝑥
++
+ℎ
+)
+−
+𝑓
+(
+𝑥
+)
+ℎ
+f 
+′
+ (x)=lim 
+h→0
+​
+  
+h
+f(x+h)−f(x)
+​
+ . For instance, given 
+𝑓
+(
+𝑥
+)
+=
+𝑥
+2
+f(x)=x 
+2
+ , the derivative is 
+𝑓
+′
+(
+𝑥
+)
+=
+2
+𝑥
+f 
+′
+ (x)=2x, found by applying the definition. Integrals, on the other hand, are used to calculate the accumulation of quantities, such as areas under curves or total distances. A definite integral is represented as 
+∫
+𝑎
+𝑏
+𝑓
+(
+𝑥
+)
+ 
+𝑑
+𝑥
+∫ 
+a
+b
+​
+ f(x)dx, which calculates the area under the curve 
+𝑓
+(
+𝑥
+)
+f(x) from 
+𝑥
+=
+𝑎
+x=a to 
+𝑥
+=
+𝑏
+x=b. For example, evaluating 
+∫
+0
+2
+(
+2
+𝑥
+)
+ 
+𝑑
+𝑥
+∫ 
+0
+2
+​
+ (2x)dx gives 
+[
+𝑥
+2
+]
+0
+2
+=
+4
+[x 
+2
+ ] 
+0
+2
+​
+ =4. Calculus has numerous applications: in physics, it analyzes motion, forces, and energy; in economics, it is used for marginal analysis; in biology, it models population growth and decay; and in engineering, it aids in structural analysis, signal processing, and control systems.
