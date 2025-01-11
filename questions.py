@@ -1,6 +1,8 @@
 from openai import OpenAI
+import os
 
-#YOUR_API_KEY = "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"
+API_KEY = os.getenv('API_KEY')
+
 def questions(text):
     messages = [
         {
@@ -19,7 +21,7 @@ def questions(text):
         },
     ]
 
-    client = OpenAI(api_key=YOUR_API_KEY, base_url="https://api.perplexity.ai")
+    client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
 
     # chat completion without streaming
     response = client.chat.completions.create(
