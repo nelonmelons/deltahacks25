@@ -21,6 +21,8 @@ def questions(text):
         },
     ]
 
+    print(API_KEY)
+
     client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
 
     # chat completion without streaming
@@ -30,7 +32,7 @@ def questions(text):
     )
     return response
 
-with open('sample.txt', 'r', encoding='utf-8') as file:
+with open('assets/sample.txt', 'r', encoding='utf-8') as file:
     text = file.read()
 response = questions(text)
 print(response)

@@ -1,6 +1,6 @@
 # profiles.py
 import streamlit as st
-from supabase_client import get_supabase_client
+from gamification.supabase_client import get_supabase_client
 
 def view_profile(user_id):
     supabase = get_supabase_client()

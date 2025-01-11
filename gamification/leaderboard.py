@@ -1,6 +1,6 @@
 # leaderboard.py
 import streamlit as st
-from supabase_client import get_supabase_client
+from gamification.supabase_client import get_supabase_client
 import pandas as pd
 
 def display_leaderboard():

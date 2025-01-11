@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from auth import login, register
+from gamification.auth import login, register
 from gamification.leaderboard import display_leaderboard
 from gamification.groupleaderboard import display_group_leaderboard
 from gamification.points import manage_points
