@@ -1,4 +1,6 @@
 .venv
+.env
 resultEmotion.txt
 **__pycache__/
 output_eyegaze.mp4
+

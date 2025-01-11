@@ -1,13 +1,13 @@
 # app.py
 import streamlit as st
 from auth import login, register
-from leaderboard import display_leaderboard
-from groupleaderboard import display_group_leaderboard
-from points import manage_points
-from groups import manage_groups
-from focus_session import focus_session
-from questions.questions import questions
-from supabase_client import get_supabase_client
+from gamification.leaderboard import display_leaderboard
+from gamification.groupleaderboard import display_group_leaderboard
+from gamification.points import manage_points
+from gamification.groups import manage_groups
+from gamification.focus_session import focus_session
+from gamification.questions import questions
+from gamification.supabase_client import get_supabase_client
 
 def main():
     st.title("Focus and Productivity App")
