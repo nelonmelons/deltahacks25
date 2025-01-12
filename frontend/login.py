@@ -1,5 +1,6 @@
 import streamlit as st
 from auth0_component import login_button
+from auth import add_to_supabase
 
 # Initialize session state variables if they don't exist
 if "logged_in" not in st.session_state:
@@ -23,6 +24,7 @@ class Login:
         if user_info:
             st.session_state.logged_in = True
             st.session_state.user_info = user_info
+            add_to_supabase(user_info)
             st.rerun()  # Refresh the app after login
 
     @staticmethod

@@ -5,3 +5,5 @@ resultEmotion.txt
 output_eyegaze.mp4
 .streamlit/secrets.toml
 personal_notes.txt
+**/node_modules/
+**/dist/
