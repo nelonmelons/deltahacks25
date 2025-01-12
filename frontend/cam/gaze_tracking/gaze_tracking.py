@@ -180,13 +180,13 @@ class GazeTracking(object):
         If draw_line=True, draws the nose tip line on self.frame.
         """
         if self.frame is None:
-            return None
+            return 0 # No frame to analyze (detect as center)
         
         # Convert to gray for face detection
         faces = self._face_detector(gray)
 
         if len(faces) == 0:
-            return None  # No face detected
+            return 0  # No face detected (detect as center)
 
         # For simplicity, assume first face
         face = faces[0]  
@@ -234,7 +234,7 @@ class GazeTracking(object):
         )
         
         if not success:
-            return None
+            return 0
         
         # Project a line outward from nose tip
         (nose_end_point2D, jacobian) = cv2.projectPoints(
@@ -260,4 +260,8 @@ class GazeTracking(object):
         #  angle_from_vertical < 0 => line angled to the left
 
         # Decide direction (tweak thresholds as you like)
+        if angle_from_vertical is not None:
+            return angle_from_vertical
+        else:
+            return 100  # No face detected
         return angle_from_vertical if angle_from_vertical is not None else 100

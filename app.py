@@ -1,13 +1,13 @@
 # app.py
 import streamlit as st
-from gamification.auth import login, register
-from gamification.leaderboard import display_leaderboard
-from gamification.groupleaderboard import display_group_leaderboard
-from gamification.points import manage_points
-from gamification.groups import manage_groups
-from gamification.focus_session import focus_session
-from gamification.questions import questions
-from gamification.supabase_client import get_supabase_client
+from frontend.auth import login, register
+from frontend.leaderboard import display_leaderboard
+from frontend.groupleaderboard import display_group_leaderboard
+from frontend.points import manage_points
+from frontend.groups import manage_groups
+from frontend.focus_session import focus_session
+from frontend.questions import questions
+from frontend.supabase_client import get_supabase_client
 import os
 from auth0_component import login_button
 
@@ -21,8 +21,18 @@ def main():
     clientId = 'On2JJoTgtQVYaWxHvqxhn2LBBAwm6EqX'
     domain = 'dev-j3m4k7dwiqywttol.us.auth0.com'
 
-
     st.title("Focus and Productivity App")
+
+    # user_info = login_button(clientId = clientId, domain = domain)
+
+    # if user_info:
+    #     st.write(f'Hi {user_info["nickname"]}')
+    #     # st.write(user_info) # some private information here
+            
+    # if not user_info:
+    #     st.write("Please login to continue")
+
+
     
     # Bypass login with a test user
     if 'user' not in st.session_state:

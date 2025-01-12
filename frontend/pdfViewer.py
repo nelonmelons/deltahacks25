@@ -7,6 +7,8 @@ import base64
 import threading
 import queue
 
+from cam.gaze_tracking.gaze_tracking import GazeTracking
+
 
 # Suppress terminal messages
 logging.getLogger("streamlit").setLevel(logging.ERROR)
@@ -87,21 +89,89 @@ def time_setting_page():
             st.error("Please specify a valid reading duration (greater than 0).")
 
 # Threaded webcam capture
-def start_webcam_feed(webcam_queue):
+def start_webcam_feed(webcam_queue, locking_in=True):
+
+    ongaze=0
+    offgaze=0
+    absgaze=0
+
+    face_away=0
+    face_towards=0
+
+    focuspercent=0
+    distractedpercent=0
+    abspercent=0
+    onscreen=0
+    offscreen=0
+    onscreenpercent=0
+    offscreenpercent=0
+    maxpresence=0
+
+    gaze = GazeTracking()
     cap = cv2.VideoCapture(0)  # Open the webcam
-    while True:
-        ret, frame = cap.read()
+    frame_width = int(cap.get(3))
+    frame_height = int(cap.get(4))
+    while locking_in:
+        ret, frame_color_to_send = cap.read()
         if ret:
-            # Convert BGR to RGB for correct color representation
-            try:
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            except cv2.error as e:
-                logging.error(f"Error converting frame from BGR to RGB: {e}")
-                continue
-            _, encoded_image = cv2.imencode('.jpg', frame)
+            _, encoded_image = cv2.imencode('.jpg', frame_color_to_send)
             img_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
             if not webcam_queue.full():
                 webcam_queue.put(img_base64)
+            # Convert BGR to RGB for correct color representation
+
+            
+            gaze.refresh(frame_color_to_send)
+            frame = gaze.annotated_frame()
+            
+            # use grayscale for faster processing
+            try:
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            except cv2.error as e:
+                logging.error(f"Error converting frame from BGR to RGB: {e}")
+                continue
+            
+            text = ""
+
+            vertical_c = gaze.vertical_ratio()
+            horizontal_c = gaze.horizontal_ratio()
+            
+            if vertical_c is None or horizontal_c is None:
+                text = "Eyes not detected"
+                absgaze += 1
+            elif vertical_c<=0.4 or vertical_c>=0.6 or horizontal_c<=0.44 or horizontal_c>=0.74:
+                text = "Eyes not paying attention"
+                offgaze += 1
+            else:
+                text = "Eyes paying attention"
+                ongaze += 1
+
+            angle_from_vertical = gaze.get_head_pose_direction(gray, draw_line = True)
+
+            if angle_from_vertical > 60 and angle_from_vertical < 95:
+                face_direction = "Right"
+                face_away += 1
+            elif angle_from_vertical < -60:
+                face_direction = "Left"
+                face_away += 1
+            elif angle_from_vertical  == 100:
+                face_direction = "No face detected"
+                face_away += 1
+            else:
+                face_direction = "Center"
+                face_towards += 1
+
+            # detect face(s)
+            sum_gaze=ongaze+offgaze+absgaze
+            eye_forward_percent=round((ongaze * 100 / sum_gaze),2) if sum_gaze != 0 else 100
+            
+            sum_direction = face_away + face_towards
+            face_towards_percent=round((face_towards*100/sum_direction),2) if sum_direction != 0 else 100
+            
+            print(f'Eye gaze: {text}, face direction: {face_direction}')
+            
+            
+
         time.sleep(0.1)  # Limit frame rate to 10 FPS
     cap.release()
 

@@ -1,18 +1,18 @@
 import streamlit as st
 from questionDriver import QuestionDriver as qd
 from questionGenerator import QuestionGenerator as qg
-# import serial
-# import time
+import serial
+import time
 
-# arduino = serial.Serial(port='COM5', baudrate=9600, timeout=1)  # Replace 'COM4' with your Arduino's port
+arduino = serial.Serial(port='/dev/tty.usbmodemF412FA652F7C2', baudrate=9600, timeout=1)  # Replace 'COM4' with your Arduino's port
 
 
-# def send_command(command):
-#     """Send a command to the Arduino."""
-#     if arduino:
-#         arduino.write((command + '\n').encode())  # Send command as bytes
-#         time.sleep(0.1)  # Give Arduino time to process
-#         print(f"Command '{command}' sent to Arduino!")
+def send_command(command):
+    """Send a command to the Arduino."""
+    if arduino:
+        arduino.write((command + '\n').encode())  # Send command as bytes
+        time.sleep(0.1)  # Give Arduino time to process
+        print(f"Command '{command}' sent to Arduino!")
 
 # App layout
 st.title("Quiz Application")
@@ -79,11 +79,11 @@ else:
             if current_question.is_correct(user_answer):
                 st.session_state.feedback = "✅ Correct!"
                 st.session_state.score += 1
-                # send_command("toggle_sweeper")
+                send_command("toggle_sweeper")
                 st.rerun()
             else:
                 st.session_state.feedback = f"❌ Incorrect. The correct answer is **{current_question.correct_choice}) {current_question.choices[current_question.correct_choice]}**."
-                # send_command("true")
+                send_command("true")
                 st.rerun()
 
         # Display feedback after answering
