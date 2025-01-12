@@ -2,6 +2,11 @@ import streamlit as st
 from pdf2image import convert_from_bytes
 import time
 import logging
+import cv2
+import base64
+import threading
+import queue
+
 
 # Suppress terminal messages
 logging.getLogger("streamlit").setLevel(logging.ERROR)
@@ -81,6 +86,30 @@ def time_setting_page():
         else:
             st.error("Please specify a valid reading duration (greater than 0).")
 
+# Threaded webcam capture
+def start_webcam_feed(webcam_queue):
+    cap = cv2.VideoCapture(0)  # Open the webcam
+    while True:
+        ret, frame = cap.read()
+        if ret:
+            # Convert BGR to RGB for correct color representation
+            try:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            except cv2.error as e:
+                logging.error(f"Error converting frame from BGR to RGB: {e}")
+                continue
+            _, encoded_image = cv2.imencode('.jpg', frame)
+            img_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
+            if not webcam_queue.full():
+                webcam_queue.put(img_base64)
+        time.sleep(0.1)  # Limit frame rate to 10 FPS
+    cap.release()
+
+# Initialize webcam thread and queue
+if "webcam_queue" not in st.session_state:
+    st.session_state.webcam_queue = queue.Queue(maxsize=1)  # Hold only the latest frame
+    webcam_thread = threading.Thread(target=start_webcam_feed, args=(st.session_state.webcam_queue,), daemon=True)
+    webcam_thread.start()
 
 def read_page():
     """Page for reading PDF."""
@@ -97,8 +126,8 @@ def read_page():
             # Timer and progress bar placeholders
             progress_placeholder = st.empty()
             time_placeholder = st.empty()
+            webcam_placeholder = st.empty()
             popup_placeholder = st.empty()
-            completion_placeholder = st.empty()
 
             # Navigation and display
             st.title("📖 PDF Reading Session")
@@ -130,9 +159,9 @@ def read_page():
                 st.session_state.pdf_bytes = None
                 st.session_state.current_page = 1
                 st.session_state.target_time = 0
-                st.rerun()  # Rerun the app to switch to the upload page
+                st.rerun()
 
-            # Continuously update progress bar and time remaining text
+            # Continuously update progress bar, time remaining, and webcam feed
             while True:
                 progress, elapsed_time = get_progress()
                 remaining_time = max(0, st.session_state.target_time - elapsed_time)
@@ -155,72 +184,54 @@ def read_page():
                     unsafe_allow_html=True
                 )
 
-                if elapsed_time >= st.session_state.target_time:
-                    # Show popup completion message
-                    popup_placeholder.markdown(
-                        """
+                # Update webcam feed
+                if not st.session_state.webcam_queue.empty():
+                    img_base64_str = st.session_state.webcam_queue.get()
+                    webcam_placeholder.markdown(
+                        f"""
                         <div style="
                             position: fixed;
-                            top: 20%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            background-color: #d4edda;
-                            color: #155724;
-                            padding: 20px;
+                            bottom: 3%;
+                            right: 1%;
+                            background-color: #f9f9f9;
+                            color: #333;
+                            padding: 10px;
                             border-radius: 10px;
-                            border: 2px solid #c3e6cb;
-                            font-size: 24px;
-                            font-weight: bold;
-                            text-align: center;
+                            border: 2px solid #ddd;
                             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
                             z-index: 1000;
+                            text-align: center;
+                            width: 280px;
+                            height: 210px;
+                            overflow: hidden;
                         ">
-                            🎉 Congratulations! You have completed your reading session! 🎉
+                            <img src="data:image/jpeg;base64,{img_base64_str}" 
+                                style="width: 100%; height: auto; border-radius: 5px;" />
+                            <div style="font-size: 14px; margin-top: 5px;">📷 Webcam Feed</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                if elapsed_time >= st.session_state.target_time:
+                    # Display completion popup
+                    popup_placeholder.markdown(
+                        """
+                        <div style="text-align: center; font-size: 24px; font-weight: bold; color: #155724;">
+                            🎉 Congratulations! You have completed your reading session!
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
                     st.balloons()
-                    st.markdown(
-                        """
-                        <div style='
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            background-color: #d4edda;
-                            color: #155724;
-                            padding: 20px;
-                            border-radius: 10px;
-                            border: 2px solid #c3e6cb;
-                            font-size: 24px;
-                            font-weight: bold;
-                            text-align: center;
-                            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-                        '>
-                            🎉 Reading session completed! Great job! You may return to the menu or attempt a quiz!
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    completion_placeholder.markdown(
-                        f"<div style='text-align: center; font-size: 24px; font-weight: bold; color: #333;'>"
-                        f"🎉 Reading session completed. Great job!</div>",
-                        unsafe_allow_html=True
-                    )
-                    time.sleep(5)  # Display the popup for 5 seconds
-
-                    # Replace the popup with a static completion message
-                    popup_placeholder.empty()  # Remove the popup
                     break
-                time.sleep(1)
+                time.sleep(0.1)  # Adjust loop frequency
 
         except Exception as e:
             st.error("An error occurred while processing the PDF.")
             st.exception(e)
     else:
         st.error("No PDF file loaded. Please upload a PDF file on the main page.")
-
-
 
 # Page routing
 if st.session_state.app_state == "upload":
