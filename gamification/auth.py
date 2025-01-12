@@ -12,21 +12,29 @@ def register():
         if email and password and username:
             supabase = get_supabase_client()
             try:
-                user = supabase.auth.sign_up(email=email, password=password)
-                # Insert into profiles table
-                supabase.table('profiles').insert({
-                    'id': user.user.id,
-                    'username': username,
-                    'points': 0,
-                    'groups': []
-                }).execute()
-                st.success("Registration successful! Please log in.")
+                # Sign up the user
+                user_response = supabase.auth.sign_up(email=email, password=password)
+                
+                if user_response and user_response.user:
+                    # Insert into profiles table
+                    profile_response = supabase.table('profiles').insert({
+                        'id': user_response.user.id,          # Link profile to user ID
+                        'username': username,
+                        'points': 0,
+                        'groups': []
+                    }).execute()
+                    
+                    if profile_response.status_code == 201:
+                        st.success("Registration successful! Please log in.")
+                    else:
+                        st.error("Failed to create user profile.")
+                else:
+                    st.error("Registration failed. Please try again.")
             except Exception as e:
                 st.error(f"Registration failed: {e}")
         else:
             st.error("Please fill out all fields.")
 
-# auth.py (continued)
 def login():
     st.header("Login")
     email = st.text_input("Email")
@@ -36,9 +44,11 @@ def login():
         if email and password:
             supabase = get_supabase_client()
             try:
-                user = supabase.auth.sign_in(email=email, password=password)
-                if user.session:
-                    st.session_state['user'] = user.user
+                # Use sign_in_with_password
+                user_response = supabase.auth.sign_in_with_password(email=email, password=password)
+                
+                if user_response and user_response.user:
+                    st.session_state['user'] = user_response.user
                     st.success("Logged in successfully!")
                 else:
                     st.error("Login failed. Check your credentials.")

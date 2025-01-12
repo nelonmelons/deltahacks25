@@ -4,11 +4,35 @@ from gamification.supabase_client import get_supabase_client
 
 def add_points(user_id, points):
     supabase = get_supabase_client()
-    supabase.table('profiles').update({'points': supabase.rpc('increment', {'value': points})}).eq('id', user_id).execute()
+    # Fetch current points
+    response = supabase.table('profiles').select('points').eq('id', user_id).single().execute()
+    if response.status_code == 200:
+        current_points = response.data['points']
+        new_points = current_points + points
+        # Update points
+        update_response = supabase.table('profiles').update({'points': new_points}).eq('id', user_id).execute()
+        if update_response.status_code == 200:
+            st.success(f"Added {points} points.")
+        else:
+            st.error("Failed to update points.")
+    else:
+        st.error("User profile not found.")
 
 def deduct_points(user_id, points):
     supabase = get_supabase_client()
-    supabase.table('profiles').update({'points': supabase.rpc('decrement', {'value': points})}).eq('id', user_id).execute()
+    # Fetch current points
+    response = supabase.table('profiles').select('points').eq('id', user_id).single().execute()
+    if response.status_code == 200:
+        current_points = response.data['points']
+        new_points = max(current_points - points, 0)  # Prevent negative points
+        # Update points
+        update_response = supabase.table('profiles').update({'points': new_points}).eq('id', user_id).execute()
+        if update_response.status_code == 200:
+            st.warning(f"Deducted {points} points.")
+        else:
+            st.error("Failed to update points.")
+    else:
+        st.error("User profile not found.")
 
 def manage_points(user_id):
     st.header("Manage Points")
@@ -19,8 +43,5 @@ def manage_points(user_id):
     if st.button("Submit"):
         if action == "Add Points":
             add_points(user_id, points)
-            st.success(f"Added {points} points to your account.")
         else:
             deduct_points(user_id, points)
-            st.warning(f"Deducted {points} points from your account.")
-

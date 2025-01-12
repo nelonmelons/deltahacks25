@@ -9,12 +9,17 @@ class QuestionDriver:
 
     def parse_questions(self):
         # Split the text into sections for each question
-        question_blocks = re.split(r'### Question \d+:', self.text)[1:]
+        question_blocks = re.split(r'### Question \d+:', self.text)[1:]  # Split by "### Question <number>:"
 
         for block in question_blocks:
-            # Extract title
-            title_match = re.search(r'(.*?)\n\*\*Question:\*\*', block, re.DOTALL)
-            title = title_match.group(1).strip() if title_match else "Untitled"
+            # Extract title and the main question text
+            title_match = re.search(r'(.*?)\n\*\*Question:\*\* (.*?)(?:\n\n|\Z)', block, re.DOTALL)
+            if title_match:
+                title_before = self.convert_latex_to_text(title_match.group(1).strip())  # Title before "Question:"
+                title_after = self.convert_latex_to_text(title_match.group(2).strip())  # Text after "Question:"
+                title = f"{title_before} - {title_after}"
+            else:
+                title = self.convert_latex_to_text("Untitled")
 
             # Extract choices and convert LaTeX to plain text
             choices = re.findall(r'\*\*([A-D])\)\*\* (.*?)\n', block)
@@ -22,12 +27,18 @@ class QuestionDriver:
 
             # Extract correct answer
             correct_match = re.search(r'\*\*Correct Answer:\*\* ([A-D])', block)
-            correct_choice = correct_match.group(1) if correct_match else None
+            correct_choice = self.convert_latex_to_text(correct_match.group(1)) if correct_match else None
+
+            # Debugging: Print the extracted components
+            print(f"DEBUG: Title: {title}")
+            print(f"DEBUG: Choices: {choice_dict}")
+            print(f"DEBUG: Correct Answer: {correct_choice}")
 
             # Create Question object if valid
             if title and choice_dict and correct_choice:
                 question = Question(title, choice_dict, correct_choice)
                 self.questions.append(question)
+
 
     def convert_latex_to_text(self, text):
         # Replace LaTeX symbols with plain text equivalents

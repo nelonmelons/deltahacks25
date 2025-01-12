@@ -3,4 +3,5 @@
 resultEmotion.txt
 **__pycache__/
 output_eyegaze.mp4
-
+.streamlit/secrets.toml
+personal_notes.txt

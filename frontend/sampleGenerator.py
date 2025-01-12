@@ -1,5 +1,7 @@
 from openai import OpenAI
+import os
 
+API_KEY = "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"
 def questions(text):
     messages = [
         {
@@ -17,8 +19,8 @@ def questions(text):
             ),
         },
     ]
-
-    client = OpenAI(api_key=YOUR_API_KEY, base_url="https://api.perplexity.ai")
+    print (API_KEY)
+    client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
 
     # chat completion without streaming
     response = client.chat.completions.create(
@@ -27,7 +29,5 @@ def questions(text):
     )
     return response
 
-with open('sample.txt', 'r', encoding='utf-8') as file:
-    text = file.read()
-response = questions(text)
+response = questions("Calculus")
 print(response)
