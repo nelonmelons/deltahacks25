@@ -2,12 +2,19 @@
 import streamlit as st
 from gamification.supabase_client import get_supabase_client
 
-def view_profile(user_id):
+def get_user_profile(user_id):
     supabase = get_supabase_client()
-    profile = supabase.table('profiles').select('*').eq('id', user_id).single().execute()
-    if profile.data:
-        st.write(f"**Username:** {profile.data['username']}")
-        st.write(f"**Points:** {profile.data['points']}")
-        st.write(f"**Groups:** {', '.join(profile.data['groups']) if profile.data['groups'] else 'None'}")
+    response = supabase.table('profiles').select('*').eq('id', user_id).single().execute()
+    if response.status_code == 200 and response.data:
+        return response.data
+    else:
+        return None
+
+def display_profile(user_id):
+    profile = get_user_profile(user_id)
+    if profile:
+        st.write(f"**Username:** {profile['username']}")
+        st.write(f"**Points:** {profile['points']}")
+        st.write(f"**Groups:** {', '.join(profile['groups']) if profile['groups'] else 'None'}")
     else:
         st.error("Profile not found.")

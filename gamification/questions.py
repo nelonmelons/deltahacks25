@@ -2,7 +2,6 @@ from openai import OpenAI
 import os
 
 API_KEY = os.getenv('API_KEY')
-
 def questions(text):
     messages = [
         {
@@ -32,7 +31,5 @@ def questions(text):
     )
     return response
 
-with open('assets/sample.txt', 'r', encoding='utf-8') as file:
-    text = file.read()
-response = questions(text)
+response = questions("calculus")
 print(response)
