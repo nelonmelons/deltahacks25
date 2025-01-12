@@ -9,7 +9,7 @@ import queue
 from collections import deque
 
 from cam.gaze_tracking.gaze_tracking import GazeTracking
-
+from points import add_points
 
 # Suppress terminal messages
 locking_in = True
@@ -161,6 +161,7 @@ def start_webcam_feed(webcam_queue):
             eye_forward_percent= sum(gaze_history)*100/len(gaze_history) if gaze_history else 100
             face_towards_percent=sum(face_history)*100/len(face_history) if face_history else 100
 
+
             if eye_forward_percent<=50 and len(gaze_history)>=12:
                 print('Locked out from gaze!')
                 gaze_history.clear()
@@ -228,7 +229,7 @@ def read_page():
                 st.session_state.current_page = 1
                 st.session_state.target_time = 0
                 st.rerun()
-
+            current_session_points = 0
             # Continuously update progress bar, time remaining, and webcam feed
             while True:
                 progress, elapsed_time = get_progress()
@@ -254,6 +255,7 @@ def read_page():
 
                 # Update webcam feed
                 if not st.session_state.webcam_queue.empty():
+                    current_session_points += 5
                     img_base64_str = st.session_state.webcam_queue.get()
                     webcam_placeholder.markdown(
                         f"""
@@ -284,6 +286,7 @@ def read_page():
                 if elapsed_time >= st.session_state.target_time:
                     # Display completion popup
                     locking_in = False
+                    add_points('user_id', current_session_points)
                     popup_placeholder.markdown(
                         """
                         <div style="text-align: center; font-size: 24px; font-weight: bold; color: #155724;">
