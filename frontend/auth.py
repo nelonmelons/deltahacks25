@@ -1,6 +1,6 @@
 # auth.py
 import streamlit as st
-from gamification.supabase_client import get_supabase_client
+from supabase_client import get_supabase_client
 
 def register():
     st.header("Register")
@@ -12,8 +12,11 @@ def register():
         if email and password and username:
             supabase = get_supabase_client()
             try:
-                # Sign up the user
-                user_response = supabase.auth.sign_up(email=email, password=password)
+                # Sign up the user (pass in a dict instead of two arguments)
+                user_response = supabase.auth.sign_up({
+                    "email": email,
+                    "password": password
+                })
                 
                 if user_response and user_response.user:
                     # Insert into profiles table
@@ -39,14 +42,17 @@ def login():
     st.header("Login")
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
-    
+
     if st.button("Login"):
         if email and password:
             supabase = get_supabase_client()
             try:
-                # Use sign_in_with_password
-                user_response = supabase.auth.sign_in_with_password(email=email, password=password)
-                
+                # Pass the credentials as a dictionary
+                user_response = supabase.auth.sign_in_with_password({
+                    "email": email,
+                    "password": password
+                })
+
                 if user_response and user_response.user:
                     st.session_state['user'] = user_response.user
                     st.success("Logged in successfully!")
@@ -56,3 +62,12 @@ def login():
                 st.error(f"Login failed: {e}")
         else:
             st.error("Please enter both email and password.")
+
+
+if __name__ == "__main__":
+    st.title("Authentication")
+    st.write("Please register or login.")
+    if st.checkbox("Register"):
+        register()
+    if st.checkbox("Login"):
+        login()
