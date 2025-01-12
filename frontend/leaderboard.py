@@ -9,8 +9,8 @@ st.set_page_config(
     layout="centered",
 )
 
-# Page content
-st.header("🏆 Leaderboard")
+# Page header
+st.markdown("<h1 style='text-align: center;'>🏆 Leaderboard</h1>", unsafe_allow_html=True)
 supabase = get_supabase_client()
 
 # Fetch top 10 users by points
@@ -21,6 +21,60 @@ if data:
     # Create a DataFrame and add a ranking column starting at 1
     df = pd.DataFrame(data)
     df.insert(0, 'Rank', range(1, len(df) + 1))  # Add 'Rank' column at the start
-    st.dataframe(df, hide_index=True)  # Display the DataFrame without the default index
+
+    # Generate the HTML table
+    rows = ""
+    for _, row in df.iterrows():
+        rows += f"""
+        <tr>
+            <td>{row['Rank']}</td>
+            <td>{row['username']}</td>
+            <td>{row['points']}</td>
+        </tr>
+        """
+
+    leaderboard_html = f"""
+    <style>
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: center;
+        }}
+        thead {{
+            background-color: #f2a03b;
+            color: white;
+        }}
+        th, td {{
+            padding: 10px;
+            border: 1px solid #ddd;
+        }}
+        tbody tr:nth-child(odd) {{
+            background-color: #f9f9f9;
+        }}
+        tbody tr:nth-child(even) {{
+            background-color: #ffffff;
+        }}
+        tbody tr:hover {{
+            background-color: #f1f1f1;
+        }}
+    </style>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows}
+        </tbody>
+    </table>
+    """
+
+    # Render the leaderboard table
+    st.components.v1.html(leaderboard_html, height=400)
 else:
-    st.write("No data available.")
+    st.info("No data available. The leaderboard will update once users participate.")
