@@ -3,16 +3,31 @@ from questionDriver import QuestionDriver as qd
 from questionGenerator import QuestionGenerator as qg
 import serial
 import time
+import pygame
 
 arduino = serial.Serial(port='/dev/tty.usbmodemF412FA652F7C2', baudrate=9600, timeout=1)  # Replace 'COM4' with your Arduino's port
 
+pygame.mixer.init()
+
+# Load the MP3 file
+sound_path = "squid.mp3"  # Replace with the full path to your sound file
+try:
+    pygame.mixer.music.load(sound_path)
+except pygame.error as e:
+    st.error(f"Could not load the sound file: {e}")
 
 def send_command(command):
     """Send a command to the Arduino."""
     if arduino:
         arduino.write((command + '\n').encode())  # Send command as bytes
         time.sleep(0.1)  # Give Arduino time to process
-        print(f"Command '{command}' sent to Arduino!")
+        st.write(f"Command '{command}' sent to Arduino!")
+
+def toggle_sweeper_with_sound():
+    """Send 'toggle_sweeper' command, wait 5 seconds, then play a sound."""
+    pygame.mixer.music.play()  # Play the loaded sound
+    time.sleep(5)  # Wait for 5 seconds
+    send_command('toggle_sweeper')  # Send the command to the Arduino
 
 # App layout
 st.title("Quiz Application")
@@ -79,7 +94,7 @@ else:
             if current_question.is_correct(user_answer):
                 st.session_state.feedback = "✅ Correct!"
                 st.session_state.score += 1
-                send_command("toggle_sweeper")
+                toggle_sweeper_with_sound()
                 st.rerun()
             else:
                 st.session_state.feedback = f"❌ Incorrect. The correct answer is **{current_question.correct_choice}) {current_question.choices[current_question.correct_choice]}**."
@@ -125,5 +140,5 @@ else:
                 del st.session_state[key]
         st.rerun()
 
-# if arduino:
-#     arduino.close()
+if arduino:
+    arduino.close()

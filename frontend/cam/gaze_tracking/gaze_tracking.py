@@ -264,4 +264,3 @@ class GazeTracking(object):
             return angle_from_vertical
         else:
             return 100  # No face detected
-        return angle_from_vertical if angle_from_vertical is not None else 100

@@ -6,12 +6,13 @@ import cv2
 import base64
 import threading
 import queue
+from collections import deque
 
 from cam.gaze_tracking.gaze_tracking import GazeTracking
-
+from points import add_points
 
 # Suppress terminal messages
-
+locking_in = True
 
 # Helper functions
 def start_timer():
@@ -76,14 +77,16 @@ def time_setting_page():
             st.error("Please specify a valid reading duration (greater than 0).")
 
 # Threaded webcam capture
-def start_webcam_feed(webcam_queue, locking_in=True):
+def start_webcam_feed(webcam_queue):
 
     ongaze=0
     offgaze=0
     absgaze=0
+    gaze_history = deque(maxlen=15)
 
     face_away=0
     face_towards=0
+    face_history = deque(maxlen=15)
 
     focuspercent=0
     distractedpercent=0
@@ -101,15 +104,12 @@ def start_webcam_feed(webcam_queue, locking_in=True):
     while locking_in:
         ret, frame_color_to_send = cap.read()
         if ret:
-            _, encoded_image = cv2.imencode('.jpg', frame_color_to_send)
+            gaze.refresh(frame_color_to_send)
+            frame = gaze.annotated_frame()
+            _, encoded_image = cv2.imencode('.jpg', frame)
             img_base64 = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
             if not webcam_queue.full():
                 webcam_queue.put(img_base64)
-            # Convert BGR to RGB for correct color representation
-
-            
-            gaze.refresh(frame_color_to_send)
-            frame = gaze.annotated_frame()
             
             # use grayscale for faster processing
             try:
@@ -125,41 +125,55 @@ def start_webcam_feed(webcam_queue, locking_in=True):
             
             if vertical_c is None or horizontal_c is None:
                 text = "Eyes not detected"
-                absgaze += 1
-            elif vertical_c<=0.4 or vertical_c>=0.6 or horizontal_c<=0.44 or horizontal_c>=0.74:
-                text = "Eyes not paying attention"
-                offgaze += 1
+                gaze_history.append(0)
+            elif horizontal_c<=0.44:
+                text = "Eyes looking right"
+                gaze_history.append(0)
+            elif horizontal_c>=0.65:
+                text = "Eyes looking left"
+                gaze_history.append(0)
+            elif vertical_c<=0.4:
+                text = "Eyes looking up"
+                gaze_history.append(0)
+            elif vertical_c >= 0.6:
+                text = 'Eyes looking down'
+                gaze_history.append(0)
             else:
                 text = "Eyes paying attention"
-                ongaze += 1
+                gaze_history.append(1)
 
             angle_from_vertical = gaze.get_head_pose_direction(gray, draw_line = True)
 
-            if angle_from_vertical > 60 and angle_from_vertical < 95:
+            if angle_from_vertical > 65 and angle_from_vertical < 95:
                 face_direction = "Right"
-                face_away += 1
-            elif angle_from_vertical < -60:
+                face_history.append(0)
+            elif angle_from_vertical < -65:
                 face_direction = "Left"
-                face_away += 1
+                face_history.append(0)
             elif angle_from_vertical  == 100:
                 face_direction = "No face detected"
-                face_away += 1
+                face_history.append(0)
             else:
                 face_direction = "Center"
-                face_towards += 1
+                face_history.append(1)
 
             # detect face(s)
-            sum_gaze=ongaze+offgaze+absgaze
-            eye_forward_percent=round((ongaze * 100 / sum_gaze),2) if sum_gaze != 0 else 100
+            eye_forward_percent= sum(gaze_history)*100/len(gaze_history) if gaze_history else 100
+            face_towards_percent=sum(face_history)*100/len(face_history) if face_history else 100
+
+
+            if eye_forward_percent<=50 and len(gaze_history)>=12:
+                print('Locked out from gaze!')
+                gaze_history.clear()
             
-            sum_direction = face_away + face_towards
-            face_towards_percent=round((face_towards*100/sum_direction),2) if sum_direction != 0 else 100
+            if face_towards_percent<=50 and len(face_history)>=12:
+                print('Locked out from face!')
+                face_history.clear()
             
             print(f'Eye gaze: {text}, face direction: {face_direction}')
             
-            
 
-        time.sleep(0.1)  # Limit frame rate to 10 FPS
+        time.sleep(0.05)  # Limit frame rate to 10 FPS
     cap.release()
 
 # Initialize webcam thread and queue
@@ -167,6 +181,7 @@ def start_webcam_feed(webcam_queue, locking_in=True):
 
 def read_page():
     """Page for reading PDF."""
+    global locking_in
     pdf_bytes = st.session_state.get('pdf_bytes')
 
     if pdf_bytes:
@@ -214,8 +229,9 @@ def read_page():
                 st.session_state.current_page = 1
                 st.session_state.target_time = 0
                 st.rerun()
-
+            current_session_points = 0
             # Continuously update progress bar, time remaining, and webcam feed
+            username = st.session_state.user_info.get("nickname")
             while True:
                 progress, elapsed_time = get_progress()
                 remaining_time = max(0, st.session_state.target_time - elapsed_time)
@@ -240,6 +256,7 @@ def read_page():
 
                 # Update webcam feed
                 if not st.session_state.webcam_queue.empty():
+                    current_session_points += 5
                     img_base64_str = st.session_state.webcam_queue.get()
                     webcam_placeholder.markdown(
                         f"""
@@ -269,6 +286,9 @@ def read_page():
 
                 if elapsed_time >= st.session_state.target_time:
                     # Display completion popup
+                    locking_in = False
+                    
+                    add_points(username, current_session_points)
                     popup_placeholder.markdown(
                         """
                         <div style="text-align: center; font-size: 24px; font-weight: bold; color: #155724;">
@@ -299,6 +319,7 @@ def read_page():
                         """,
                         unsafe_allow_html=True
                     )
+                    
                     break
                 time.sleep(0.1)  # Adjust loop frequency
 

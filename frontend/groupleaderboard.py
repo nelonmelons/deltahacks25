@@ -1,5 +1,4 @@
 # group_leaderboard.py
-
 import streamlit as st
 import pandas as pd
 from supabase_client import get_supabase_client

@@ -1,6 +1,6 @@
 # focus_detection_script.py
 
-from frontend.supabase_client import get_supabase_client
+from supabase_client import get_supabase_client
 from cam.eyegaze_cam import eyegaze
 import time
 import logging

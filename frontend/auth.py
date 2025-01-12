@@ -63,6 +63,47 @@ def login():
         else:
             st.error("Please enter both email and password.")
 
+def add_to_supabase(user_info):
+    supabase = get_supabase_client()
+
+    
+
+    email = user_info['email']
+    password = '1234567'
+    username = user_info['nickname']
+
+    try:
+        user_response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+    except Exception as e:
+        pass
+
+    try:
+        # Sign up the user (pass in a dict instead of two arguments)
+        user_response = supabase.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+        
+        if user_response and user_response.user:
+            # Insert into profiles table
+            profile_response = supabase.table('profiles').insert({
+                'id': user_response.user.id,          # Link profile to user ID
+                'username': username,
+                'points': 0,
+                'groups': []
+            }).execute()
+            
+            if profile_response.status_code == 201:
+                st.success("Registration successful! Please log in.")
+            else:
+                st.error("Failed to create user profile.")
+        else:
+            pass
+    except Exception as e:
+        st.error(f"Registration failed: {e}")
 
 if __name__ == "__main__":
     st.title("Authentication")

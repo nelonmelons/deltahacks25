@@ -1,9 +1,9 @@
 # focus_session.py
 
 import streamlit as st
-from frontend.focus_detection_script import detect_focus, get_supabase_client
-from frontend.points import add_points, deduct_points
-from frontend.hardware_control import activate_water_gun, play_lock_message
+from focus_detection_script import detect_focus, get_supabase_client
+from points import add_points, deduct_points
+from hardware_control import activate_water_gun, play_lock_message
 import threading
 import time
 import logging

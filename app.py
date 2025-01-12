@@ -11,7 +11,7 @@ from frontend.questions import questions
 from frontend.supabase_client import get_supabase_client
 import os
 from auth0_component import login_button
-
+from frontend.auth import register
 import dotenv
 
 
@@ -25,14 +25,15 @@ def main():
 
     st.title("Focus and Productivity App")
 
-    # user_info = login_button(clientId = clientId, domain = domain)
+    user_info = login_button(clientId = clientId, domain = domain)
 
-    # if user_info:
-    #     st.write(f'Hi {user_info["nickname"]}')
-    #     # st.write(user_info) # some private information here
+    if user_info:
+        st.write(f'Hi {user_info["nickname"]}')
+        
+        
             
-    # if not user_info:
-    #     st.write("Please login to continue")
+    if not user_info:
+        st.write("Please login to continue")
 
 
     

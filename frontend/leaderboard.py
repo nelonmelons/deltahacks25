@@ -18,7 +18,9 @@ response = supabase.table('profiles').select('username, points').order('points',
 data = response.data
 
 if data:
+    # Create a DataFrame and add a ranking column starting at 1
     df = pd.DataFrame(data)
-    st.table(df)
+    df.insert(0, 'Rank', range(1, len(df) + 1))  # Add 'Rank' column at the start
+    st.dataframe(df, hide_index=True)  # Display the DataFrame without the default index
 else:
     st.write("No data available.")
