@@ -101,7 +101,7 @@ def add_to_supabase(user_info):
             else:
                 st.error("Failed to create user profile.")
         else:
-            st.error("Registration failed. Please try again.")
+            pass
     except Exception as e:
         st.error(f"Registration failed: {e}")
 

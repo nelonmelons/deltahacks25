@@ -1,6 +1,6 @@
 # group_leaderboard.py
 import streamlit as st
-from frontend.supabase_client import get_supabase_client
+from supabase_client import get_supabase_client
 import pandas as pd
 
 def display_group_leaderboard(group_id):

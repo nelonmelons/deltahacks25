@@ -1,22 +1,16 @@
 # points_management.py
 import streamlit as st
-from frontend.supabase_client import get_supabase_client
+from supabase_client import get_supabase_client
 
-def add_points(user_id, points):
+def add_points(nickname, points):
     supabase = get_supabase_client()
     # Fetch current points
-    response = supabase.table('profiles').select('points').eq('id', user_id).single().execute()
-    if response.status_code == 200:
-        current_points = response.data['points']
-        new_points = current_points + points
+    response = supabase.table('profiles').select('points').eq('username', nickname).single().execute()
+    current_points = response.data['points']
+    new_points = current_points + points
         # Update points
-        update_response = supabase.table('profiles').update({'points': new_points}).eq('id', user_id).execute()
-        if update_response.status_code == 200:
-            st.success(f"Added {points} points.")
-        else:
-            st.error("Failed to update points.")
-    else:
-        st.error("User profile not found.")
+    update_response = supabase.table('profiles').update({'points': new_points}).eq('username', nickname).execute()
+
 
 def deduct_points(user_id, points):
     supabase = get_supabase_client()
@@ -45,3 +39,6 @@ def manage_points(user_id):
             add_points(user_id, points)
         else:
             deduct_points(user_id, points)
+
+if __name__ == "__main__":
+    add_points("liurnicole", 10)

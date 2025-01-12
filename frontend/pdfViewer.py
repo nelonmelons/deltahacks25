@@ -231,6 +231,7 @@ def read_page():
                 st.rerun()
             current_session_points = 0
             # Continuously update progress bar, time remaining, and webcam feed
+            username = st.session_state.user_info.get("nickname")
             while True:
                 progress, elapsed_time = get_progress()
                 remaining_time = max(0, st.session_state.target_time - elapsed_time)
@@ -286,7 +287,8 @@ def read_page():
                 if elapsed_time >= st.session_state.target_time:
                     # Display completion popup
                     locking_in = False
-                    add_points('user_id', current_session_points)
+                    
+                    add_points(username, current_session_points)
                     popup_placeholder.markdown(
                         """
                         <div style="text-align: center; font-size: 24px; font-weight: bold; color: #155724;">
