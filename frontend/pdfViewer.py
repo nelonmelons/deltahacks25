@@ -181,7 +181,27 @@ def read_page():
                         unsafe_allow_html=True
                     )
                     st.balloons()
-                    st.success("🎉 **Reading session completed! Great job! You may return to the menu or attempt a quiz!**")
+                    st.markdown(
+                        """
+                        <div style='
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            background-color: #d4edda;
+                            color: #155724;
+                            padding: 20px;
+                            border-radius: 10px;
+                            border: 2px solid #c3e6cb;
+                            font-size: 24px;
+                            font-weight: bold;
+                            text-align: center;
+                            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                        '>
+                            🎉 Reading session completed! Great job! You may return to the menu or attempt a quiz!
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
                     completion_placeholder.markdown(
                         f"<div style='text-align: center; font-size: 24px; font-weight: bold; color: #333;'>"
                         f"🎉 Reading session completed. Great job!</div>",
