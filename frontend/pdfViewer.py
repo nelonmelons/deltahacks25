@@ -60,14 +60,16 @@ def time_setting_page():
     st.title("⏰ Set Reading Duration")
 
     # Time input fields
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         hours = st.number_input("Hours:", min_value=0, value=0, step=1)
     with col2:
-        minutes = st.number_input("Minutes:", min_value=0, value=30, step=1)
+        minutes = st.number_input("Minutes:", min_value=0, value=0, step=1)
+    with col3:
+        seconds = st.number_input("Seconds:", min_value=0, value=10, step=1)
 
     # Calculate total time in seconds
-    total_time_seconds = hours * 3600 + minutes * 60
+    total_time_seconds = hours * 3600 + minutes * 60 + seconds
 
     # Proceed button
     if st.button("Start Reading"):
@@ -95,6 +97,8 @@ def read_page():
             # Timer and progress bar placeholders
             progress_placeholder = st.empty()
             time_placeholder = st.empty()
+            popup_placeholder = st.empty()
+            completion_placeholder = st.empty()
 
             # Navigation and display
             st.title("📖 PDF Reading Session")
@@ -121,7 +125,7 @@ def read_page():
             st.markdown(f"<div style='text-align: center; font-size: 18px; font-weight: bold;'>Page {current_page}</div>", unsafe_allow_html=True)
 
             # Go Back button
-            if st.button("Go Back", key="go_back_button"):
+            if st.button("Return to Menu", key="go_back_button"):
                 st.session_state.app_state = "upload"
                 st.session_state.pdf_bytes = None
                 st.session_state.current_page = 1
@@ -132,17 +136,18 @@ def read_page():
             while True:
                 progress, elapsed_time = get_progress()
                 remaining_time = max(0, st.session_state.target_time - elapsed_time)
-                
+
                 # Formatting the time remaining message
                 mins, secs = divmod(remaining_time, 60)
-                formatted_time = f"{mins:02d}:{secs:02d}"
-                
+                hrs, mins = divmod(mins, 60)
+                formatted_time = f"{hrs:02d}:{mins:02d}:{secs:02d}"
+
                 # Display progress bar
                 progress_placeholder.progress(
                     progress,
                     text=f"⏳ Progress towards target"
                 )
-                
+
                 # Display large time remaining text
                 time_placeholder.markdown(
                     f"<div style='text-align: center; font-size: 36px; font-weight: bold; color: #333;'>"
@@ -151,8 +156,41 @@ def read_page():
                 )
 
                 if elapsed_time >= st.session_state.target_time:
+                    # Show popup completion message
+                    popup_placeholder.markdown(
+                        """
+                        <div style="
+                            position: fixed;
+                            top: 20%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background-color: #d4edda;
+                            color: #155724;
+                            padding: 20px;
+                            border-radius: 10px;
+                            border: 2px solid #c3e6cb;
+                            font-size: 24px;
+                            font-weight: bold;
+                            text-align: center;
+                            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                            z-index: 1000;
+                        ">
+                            🎉 Congratulations! You have completed your reading session! 🎉
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
                     st.balloons()
-                    st.success("🎉 **Target time reached! Great job!**")
+                    st.success("🎉 **Reading session completed! Great job! You may return to the menu or attempt a quiz!**")
+                    completion_placeholder.markdown(
+                        f"<div style='text-align: center; font-size: 24px; font-weight: bold; color: #333;'>"
+                        f"🎉 Reading session completed. Great job!</div>",
+                        unsafe_allow_html=True
+                    )
+                    time.sleep(5)  # Display the popup for 5 seconds
+
+                    # Replace the popup with a static completion message
+                    popup_placeholder.empty()  # Remove the popup
                     break
                 time.sleep(1)
 
@@ -161,7 +199,6 @@ def read_page():
             st.exception(e)
     else:
         st.error("No PDF file loaded. Please upload a PDF file on the main page.")
-
 
 
 
