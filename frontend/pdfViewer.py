@@ -11,10 +11,7 @@ from cam.gaze_tracking.gaze_tracking import GazeTracking
 
 
 # Suppress terminal messages
-logging.getLogger("streamlit").setLevel(logging.ERROR)
 
-# Streamlit app configuration
-st.set_page_config(page_title="PDF Viewer", layout="wide")
 
 # Helper functions
 def start_timer():
@@ -33,17 +30,7 @@ def get_progress():
     return progress, elapsed_time
 
 # Initialize session state variables
-if 'app_state' not in st.session_state:
-    st.session_state.app_state = "upload"  # Start at the upload page
 
-if 'pdf_bytes' not in st.session_state:
-    st.session_state.pdf_bytes = None
-
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = 1
-
-if 'target_time' not in st.session_state:
-    st.session_state.target_time = 0  # Target time in seconds
 
 
 # App workflow
@@ -176,10 +163,7 @@ def start_webcam_feed(webcam_queue, locking_in=True):
     cap.release()
 
 # Initialize webcam thread and queue
-if "webcam_queue" not in st.session_state:
-    st.session_state.webcam_queue = queue.Queue(maxsize=1)  # Hold only the latest frame
-    webcam_thread = threading.Thread(target=start_webcam_feed, args=(st.session_state.webcam_queue,), daemon=True)
-    webcam_thread.start()
+
 
 def read_page():
     """Page for reading PDF."""
@@ -303,10 +287,35 @@ def read_page():
     else:
         st.error("No PDF file loaded. Please upload a PDF file on the main page.")
 
-# Page routing
-if st.session_state.app_state == "upload":
-    upload_page()
-elif st.session_state.app_state == "time_setting":
-    time_setting_page()
-elif st.session_state.app_state == "read":
-    read_page()
+
+def view_pdf_focus_session():
+    logging.getLogger("streamlit").setLevel(logging.ERROR)
+
+    # Streamlit app configuration
+    st.set_page_config(page_title="PDF Viewer", layout="wide")
+
+    if 'app_state' not in st.session_state:
+        st.session_state.app_state = "upload"  # Start at the upload page
+
+    if 'pdf_bytes' not in st.session_state:
+        st.session_state.pdf_bytes = None
+
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 1
+
+    if 'target_time' not in st.session_state:
+        st.session_state.target_time = 0  # Target time in seconds
+
+    if "webcam_queue" not in st.session_state:
+        st.session_state.webcam_queue = queue.Queue(maxsize=1)  # Hold only the latest frame
+        webcam_thread = threading.Thread(target=start_webcam_feed, args=(st.session_state.webcam_queue,), daemon=True)
+        webcam_thread.start()
+
+    if st.session_state.app_state == "upload":
+        upload_page()
+    elif st.session_state.app_state == "time_setting":
+        time_setting_page()
+    elif st.session_state.app_state == "read":
+        read_page()
+
+view_pdf_focus_session()

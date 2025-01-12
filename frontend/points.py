@@ -1,6 +1,6 @@
 # points_management.py
 import streamlit as st
-from gamification.supabase_client import get_supabase_client
+from frontend.supabase_client import get_supabase_client
 
 def add_points(user_id, points):
     supabase = get_supabase_client()

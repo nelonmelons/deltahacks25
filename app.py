@@ -5,6 +5,7 @@ from frontend.leaderboard import display_leaderboard
 from frontend.groupleaderboard import display_group_leaderboard
 from frontend.points import manage_points
 from frontend.groups import manage_groups
+# from frontend.pdfViewer import view_pdf_focus_session
 from frontend.focus_session import focus_session
 from frontend.questions import questions
 from frontend.supabase_client import get_supabase_client
@@ -20,6 +21,7 @@ def main():
     dotenv.load_dotenv()
     clientId = 'On2JJoTgtQVYaWxHvqxhn2LBBAwm6EqX'
     domain = 'dev-j3m4k7dwiqywttol.us.auth0.com'
+
 
     st.title("Focus and Productivity App")
 
@@ -59,6 +61,7 @@ def main():
     
     elif choice == "Focus Session":
         focus_session(st.session_state['user'].id)
+        # view_pdf_focus_session()
     
     elif choice == "Manage Points":
         manage_points(st.session_state['user'].id)
