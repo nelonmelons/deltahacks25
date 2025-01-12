@@ -5,3 +5,4 @@ CREATE TABLE profiles (
   groups text[] DEFAULT '{}',
   PRIMARY KEY (id)
 );
+
