@@ -21,7 +21,6 @@ def questions(text):
         },
     ]
 
-    print(API_KEY)
 
     client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
 
@@ -34,5 +33,6 @@ def questions(text):
 
 with open('assets/sample.txt', 'r', encoding='utf-8') as file:
     text = file.read()
-response = questions(text)
+# response = questions(text)
+response = 'hi'
 print(response)

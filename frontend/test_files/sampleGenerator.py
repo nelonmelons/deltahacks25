@@ -1,6 +1,5 @@
 from openai import OpenAI
 
-YOUR_API_KEY = "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"
 def questions(text):
     messages = [
         {
