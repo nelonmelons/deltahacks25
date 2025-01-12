@@ -73,5 +73,3 @@ def main():
         del st.session_state['user']
         st.success("Logged out successfully!")
 
-if __name__ == "__main__":
-    main()
