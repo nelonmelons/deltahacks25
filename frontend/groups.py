@@ -208,7 +208,7 @@ def app():
     st.title("Group Management Page")
 
     # For demo, we hard-code a user ID. In real use, retrieve from st.session_state after login.
-    user_id = st.session_state.get("user_id")# this shit doesnt work so put in ur own user id for demoing
+    user_id = '8e948565-82ec-44a3-9238-7652292d0a64'# this shit doesnt work so put in ur own user id for demoing
 
     manage_groups(user_id)
 
