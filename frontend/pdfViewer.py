@@ -10,11 +10,38 @@ from collections import deque
 
 from cam.gaze_tracking.gaze_tracking import GazeTracking
 from points import add_points
+import serial
+import pygame
 
+# arduino = serial.Serial(port='/dev/tty.usbmodemF412FA652F7C2', baudrate=9600, timeout=1)  # Replace 'COM4' with your Arduino's port
+
+
+# pygame.mixer.init()
+
+# # Load the MP3 file
+# sound_path = "squid.mp3"  # Replace with the full path to your sound file
+# try:
+#     pygame.mixer.music.load(sound_path)
+# except pygame.error as e:
+#     st.error(f"Could not load the sound file: {e}")
 # Suppress terminal messages
 locking_in = True
 
-# Helper functions
+# Arduino Functions
+def send_command(command):
+    """Send a command to the Arduino."""
+    if arduino:
+        arduino.write((command + '\n').encode())  # Send command as bytes
+        time.sleep(0.1)  # Give Arduino time to process
+        st.write(f"Command '{command}' sent to Arduino!")
+
+def toggle_sweeper_with_sound():
+    """Send 'toggle_sweeper' command, wait 5 seconds, then play a sound."""
+    pygame.mixer.music.play()  # Play the loaded sound
+    time.sleep(5)  # Wait for 5 seconds
+    send_command('toggle_sweeper')  # Send the command to the Arduino
+
+
 def start_timer():
     """Initialize the start time and target time in session state."""
     if 'start_time' not in st.session_state:
@@ -78,6 +105,7 @@ def time_setting_page():
 
 # Threaded webcam capture
 def start_webcam_feed(webcam_queue):
+    global locking_in
 
     ongaze=0
     offgaze=0
@@ -162,12 +190,16 @@ def start_webcam_feed(webcam_queue):
             face_towards_percent=sum(face_history)*100/len(face_history) if face_history else 100
 
 
-            if eye_forward_percent<=50 and len(gaze_history)>=12:
+            if eye_forward_percent<=50 and len(gaze_history)>=10:
                 print('Locked out from gaze!')
+                locking_in = False
                 gaze_history.clear()
+                face_history.clear()
             
-            if face_towards_percent<=50 and len(face_history)>=12:
+            if face_towards_percent<=50 and len(face_history)>=10:
                 print('Locked out from face!')
+                locking_in = False
+                gaze_history.clear()
                 face_history.clear()
             
             print(f'Eye gaze: {text}, face direction: {face_direction}')
@@ -197,6 +229,7 @@ def read_page():
             time_placeholder = st.empty()
             webcam_placeholder = st.empty()
             popup_placeholder = st.empty()
+            lock_out_placeholder = st.empty()
 
             # Navigation and display
             st.title("📖 PDF Reading Session")
@@ -228,6 +261,7 @@ def read_page():
                 st.session_state.pdf_bytes = None
                 st.session_state.current_page = 1
                 st.session_state.target_time = 0
+                st
                 st.rerun()
             current_session_points = 0
             # Continuously update progress bar, time remaining, and webcam feed
@@ -256,6 +290,7 @@ def read_page():
 
                 # Update webcam feed
                 if not st.session_state.webcam_queue.empty():
+                    
                     current_session_points += 5
                     img_base64_str = st.session_state.webcam_queue.get()
                     webcam_placeholder.markdown(
@@ -283,12 +318,25 @@ def read_page():
                         """,
                         unsafe_allow_html=True
                     )
+                if locking_in == False:
+                    lock_out_placeholder.markdown(
+                        """
+                        <div style="text-align: center; font-size: 24px; font-weight: bold; color: #721c24;">
+                            🚫 You have been locked out due to distractions!
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    time.sleep(1)
+                    # send_command('true')
+                    break
 
                 if elapsed_time >= st.session_state.target_time:
                     # Display completion popup
                     locking_in = False
                     
                     add_points(username, current_session_points)
+
                     popup_placeholder.markdown(
                         """
                         <div style="text-align: center; font-size: 24px; font-weight: bold; color: #155724;">
@@ -319,7 +367,7 @@ def read_page():
                         """,
                         unsafe_allow_html=True
                     )
-                    
+                    # toggle_sweeper_with_sound()
                     break
                 time.sleep(0.1)  # Adjust loop frequency
 
@@ -348,16 +396,15 @@ def view_pdf_focus_session():
     if 'target_time' not in st.session_state:
         st.session_state.target_time = 0  # Target time in seconds
 
-    if "webcam_queue" not in st.session_state:
-        st.session_state.webcam_queue = queue.Queue(maxsize=1)  # Hold only the latest frame
-        webcam_thread = threading.Thread(target=start_webcam_feed, args=(st.session_state.webcam_queue,), daemon=True)
-        webcam_thread.start()
-
     if st.session_state.app_state == "upload":
         upload_page()
     elif st.session_state.app_state == "time_setting":
         time_setting_page()
     elif st.session_state.app_state == "read":
+        
+        st.session_state.webcam_queue = queue.Queue(maxsize=1)  # Hold only the latest frame
+        webcam_thread = threading.Thread(target=start_webcam_feed, args=(st.session_state.webcam_queue,), daemon=True)
+        webcam_thread.start()
         read_page()
 
 view_pdf_focus_session()
