@@ -11,13 +11,19 @@ st.set_page_config(page_title="PDF Viewer", layout="wide")
 
 # Helper functions
 def start_timer():
-    """Initialize the start time in session state."""
+    """Initialize the start time and target time in session state."""
     if 'start_time' not in st.session_state:
         st.session_state.start_time = time.time()
 
 def get_elapsed_time():
     """Calculate elapsed time since the start of the session."""
     return int(time.time() - st.session_state.start_time)
+
+def get_progress():
+    """Calculate progress towards the target time."""
+    elapsed_time = get_elapsed_time()
+    progress = min(1.0, elapsed_time / st.session_state.target_time) if st.session_state.target_time > 0 else 0
+    return progress, elapsed_time
 
 # Initialize session state variables
 if 'app_state' not in st.session_state:
@@ -28,6 +34,9 @@ if 'pdf_bytes' not in st.session_state:
 
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 1
+
+if 'target_time' not in st.session_state:
+    st.session_state.target_time = 0  # Target time in seconds
 
 
 # App workflow
@@ -42,15 +51,34 @@ def upload_page():
     if uploaded_file:
         # Save PDF data in session state
         st.session_state.pdf_bytes = uploaded_file.read()
-        st.session_state.app_state = "read"  # Automatically transition to reading mode
-        st.session_state.start_time = time.time()  # Start timer
-        st.rerun()  # Rerun the app to switch to the reading page
+        st.session_state.app_state = "time_setting"  # Transition to the time setting screen
+        st.rerun()  # Rerun the app to switch to the time setting page
 
-     # Add a clickable icon to redirect to the read page
-    if st.button("🔍 Go to Read Page", key="read_page_icon"):
-        if st.session_state.pdf_bytes:
-            st.session_state.app_state = "read"
+
+def time_setting_page():
+    """Page for specifying reading time."""
+    st.title("⏰ Set Reading Duration")
+
+    # Time input fields
+    col1, col2 = st.columns(2)
+    with col1:
+        hours = st.number_input("Hours:", min_value=0, value=0, step=1)
+    with col2:
+        minutes = st.number_input("Minutes:", min_value=0, value=30, step=1)
+
+    # Calculate total time in seconds
+    total_time_seconds = hours * 3600 + minutes * 60
+
+    # Proceed button
+    if st.button("Start Reading"):
+        if total_time_seconds > 0:
+            st.session_state.target_time = total_time_seconds
+            st.session_state.app_state = "read"  # Transition to reading mode
+            st.session_state.start_time = time.time()  # Start the timer
             st.rerun()
+        else:
+            st.error("Please specify a valid reading duration (greater than 0).")
+
 
 def read_page():
     """Page for reading PDF."""
@@ -64,8 +92,9 @@ def read_page():
             # Start timer if not already started
             start_timer()
 
-            # Timer placeholder at the top
-            timer_placeholder = st.empty()
+            # Timer and progress bar placeholders
+            progress_placeholder = st.empty()
+            time_placeholder = st.empty()
 
             # Navigation and display
             st.title("📖 PDF Reading Session")
@@ -96,23 +125,50 @@ def read_page():
                 st.session_state.app_state = "upload"
                 st.session_state.pdf_bytes = None
                 st.session_state.current_page = 1
+                st.session_state.target_time = 0
                 st.rerun()  # Rerun the app to switch to the upload page
 
-            # Continuously update timer at the top
+            # Continuously update progress bar and time remaining text
             while True:
-                elapsed_time = get_elapsed_time()
-                timer_placeholder.markdown(f"### ⏱️ Time spent on document: {elapsed_time} seconds")
+                progress, elapsed_time = get_progress()
+                remaining_time = max(0, st.session_state.target_time - elapsed_time)
+                
+                # Formatting the time remaining message
+                mins, secs = divmod(remaining_time, 60)
+                formatted_time = f"{mins:02d}:{secs:02d}"
+                
+                # Display progress bar
+                progress_placeholder.progress(
+                    progress,
+                    text=f"⏳ Progress towards target"
+                )
+                
+                # Display large time remaining text
+                time_placeholder.markdown(
+                    f"<div style='text-align: center; font-size: 36px; font-weight: bold; color: #333;'>"
+                    f"⏳ Time remaining: {formatted_time}</div>",
+                    unsafe_allow_html=True
+                )
+
+                if elapsed_time >= st.session_state.target_time:
+                    st.balloons()
+                    st.success("🎉 **Target time reached! Great job!**")
+                    break
                 time.sleep(1)
-           
+
         except Exception as e:
             st.error("An error occurred while processing the PDF.")
             st.exception(e)
     else:
         st.error("No PDF file loaded. Please upload a PDF file on the main page.")
-    
+
+
+
 
 # Page routing
 if st.session_state.app_state == "upload":
     upload_page()
+elif st.session_state.app_state == "time_setting":
+    time_setting_page()
 elif st.session_state.app_state == "read":
     read_page()
