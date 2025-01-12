@@ -25,14 +25,14 @@ def main():
 
     st.title("Focus and Productivity App")
 
-    # user_info = login_button(clientId = clientId, domain = domain)
+    user_info = login_button(clientId = clientId, domain = domain)
 
-    # if user_info:
-    #     st.write(f'Hi {user_info["nickname"]}')
-    #     # st.write(user_info) # some private information here
+    if user_info:
+        st.write(f'Hi {user_info["nickname"]}')
+        # st.write(user_info) # some private information here
             
-    # if not user_info:
-    #     st.write("Please login to continue")
+    if not user_info:
+        st.write("Please login to continue")
 
 
     
