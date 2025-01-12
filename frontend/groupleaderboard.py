@@ -71,5 +71,5 @@ def app():
         else:
             st.error("Please enter a valid Group ID.")
 
-if __name__ == "__main__":
-    app()
+
+app()

@@ -208,10 +208,9 @@ def app():
     st.title("Group Management Page")
 
     # For demo, we hard-code a user ID. In real use, retrieve from st.session_state after login.
-    user_id = "0d98dc8f-f356-43f5-a550-170e65bced35"
+    user_id = st.session_state.get("user_id")# this shit doesnt work so put in ur own user id for demoing
 
     manage_groups(user_id)
 
 
-if __name__ == "__main__":
-    app()
+app()
